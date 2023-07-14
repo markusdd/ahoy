@@ -1,3 +1,21 @@
+## Overview
+
+On this page, you'll find detailed instructions on how to wire the module of a Wemos D1 mini or ESP32 to the radio module, as well as how to flash it with the latest firmware. This information will enable you to communicate with compatible inverters.
+
+You find the full [User_Manual here](User_Manual.md)
+
+## Compatiblity
+
+The following inverters are currently supported out of the box:
+
+Hoymiles Inverters
+
+| Status | Serie | Model | comment |
+| ----- | ----- | ------ | ------- |
+| ✔️ | MI | 300, 600, 1000/1200/⚠️ 1500 | 4-Channel is not tested yet |
+| ✔️ | HM | 300, 350, 400, 600, 700, 800, 1000?, 1200, 1500 | |
+| ⚠️ | TSUN | [TSOL-M350](https://www.tsun-ess.com/Micro-Inverter/M350-M400), [TSOL-M400](https://www.tsun-ess.com/Micro-Inverter/M350-M400), [TSOL-M800/TSOL-M800(DE)](https://www.tsun-ess.com/Micro-Inverter/M800) | others may work as well (need to be verified). |
+
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
@@ -6,9 +24,12 @@
 - [Things needed](#things-needed)
     - [There are fake NRF24L01+ Modules out there](#there-are-fake-nrf24l01-modules-out-there)
 - [Wiring things up](#wiring-things-up)
-    - [ESP8266 wiring example](#esp8266-wiring-example)
+    - [ESP8266 wiring example on WEMOS D1](#esp8266-wiring-example)
       - [Schematic](#schematic)
       - [Symbolic view](#symbolic-view)
+    - [ESP8266 wiring example on 30pin Lolin NodeMCU v3](#esp8266-wiring-example-2)
+      - [Schematic](#schematic-2)
+      - [Symbolic view](#symbolic-view-2)
     - [ESP32 wiring example](#esp32-wiring-example)
       - [Schematic](#schematic-1)
       - [Symbolic view](#symbolic-view-1)
@@ -23,63 +44,37 @@
       - [HTTP based Pages](#http-based-pages)
 - [MQTT command to set the DTU without webinterface](#mqtt-command-to-set-the-dtu-without-webinterface)
 - [Used Libraries](#used-libraries)
-- [Contact](#contact)
 - [ToDo](#todo)
 
 ***
 
-## Overview
+Solenso Inverters:
 
-This page describes how the module of a Wemos D1 mini and ESP8266 is wired to the radio module and is flashed with the latest Firmware.<br/>
-Further information will help you to communicate to the compatible inverters.
-
-You find the full [User_Manual here](User_Manual.md)
-
-## Compatiblity
-
-For now the following Inverters should work out of the box:
-
-Hoymiles Inverters
-
-- HM300
-- HM350
-- HM400
-- HM600
-- HM700
-- HM800
-- HM1000?
-- HM1200
-- HM1500
-
-TSUN Inverters:
-
-- [TSOL-M350](https://www.tsun-ess.com/Micro-Inverter/M350-M400)
-- [TSOL-M400](https://www.tsun-ess.com/Micro-Inverter/M350-M400)
-- [TSOL-M800/TSOL-M800(DE)](https://www.tsun-ess.com/Micro-Inverter/M800)
-- others may work as well (need to be verified).
+- SOL-H350
 
 ## Things needed
 
-In order to build your own Ahoy DTU, you will need some things.<br/>
-This list is not closing as the Maker Community offers more Boards than we could cover in this Readme.<br/><br/>
+If you're interested in building your own AhoyDTU, you'll need a few things to get started. While we've provided a list of recommended boards below, keep in mind that the maker community is constantly developing new and innovative options that we may not have covered in this readme..
 
-We suggest to use a WEMOS D1 mini Board as well as a NRF24L01+ Breakout Board as a bare minimum.<br/>
-Any other ESP8266 Board with at least 4MBytes of ROM could work as well, depending on your skills and goals.<br/>
-Make sure the NRF24L01+ module has the "+" in its name as we depend on the 250kbps features provided only with the plus-variant.
+For optimal performance, we recommend using a Wemos D1 mini or ESP32 along with a NRF24L01+ breakout board as a bare minimum. However, if you have experience working with other ESP boards, any board with at least 4MBytes of ROM may be suitable, depending on your skills.
+
+Just be sure that the NRF24L01+ module you choose includes the "+" in its name, as we rely on the 250kbps features that are only provided by the plus-variant.
 
 | **Parts** | **Price** |
 | --- | --- |
-| D1 ESP8266 Mini WLAN Board Mikrokontroller | 4,40 Euro |
+| D1 ESP8266 Mini WLAN Board Microcontroller | 4,40 Euro |
 | NRF24L01+ SMD Modul 2,4 GHz Wi-Fi Funkmodul | 3,45 Euro |
+| 100µF / 10V Capacitor Kondensator | 0,15 Euro |
 | Jumper Wire Steckbrücken Steckbrett weiblich-weiblich | 2,49 Euro |
 | **Total costs** | **10,34 Euro** |
 
-To also run our sister project OpenDTU and be upwards compatible for the future we would recommend to spend some more money on an ESP32 board which has two CPU cores and a NRF24L01+ module with external antenna.
+If you're interested in using our sister project OpenDTU or you want to future-proof your setup, we recommend investing in an ESP32 board that features two CPU cores. As Radio you can also use a NRF24L01+ module with an external antenna. While this option may cost a bit more, it will provide superior performance and ensure compatibility with upcoming developments.
 
 | **Parts** | **Price** |
 | --- | --- |
 | ESP32 Dev Board NodeMCU WROOM32 WiFi | 7,90 Euro |
 | NRF24L01+ PA LNA SMA mit Antenne Long | 4,50 Euro |
+| 100µF / 10V Capacitor Kondensator | 0,15 Euro |
 | Jumper Wire Steckbrücken Steckbrett weiblich-weiblich | 2,49 Euro |
 | **Total costs** | **14,89 Euro** |
 
@@ -88,6 +83,18 @@ To also run our sister project OpenDTU and be upwards compatible for the future 
 Watch out, there are some fake NRF24L01+ Modules out there that seem to use rebranded NRF24L01 Chips (without the +).<br/>
 An example can be found in [Issue #230](https://github.com/lumapu/ahoy/issues/230).<br/>
 You are welcome to add more examples of faked chips. We will add that information here.<br/>
+
+Some users reported better connection or longer range through more walls when using the
+"E01-ML01DP5" EBYTE 2,4 GHz Wireless Modul nRF24L01 + PA + LNA RF Modul, SMA-K Antenna connector,
+which has an eye-catching HF cover. But beware: It comes without the antenna!
+
+In any case you should stabilize the Vcc power by a capacitor and don't exceed the Amplifier Power Level "LOW".
+Users reporting good connection over 10m through walls / ceilings with Amplifier Power Level "MIN".
+It is not always the bigger the better...
+
+Power levels "HIGH" and "MAX" are meant to wirings where the nRF24 is supplied by an extra 3.3 Volt regulator.
+The bultin regulator on ESP boards has only low reserves in case WiFi and nRF are sending simultaneously.
+If you operate additional interfaces like a display, the reserve is again reduced.
 
 ## Wiring things up
 
@@ -107,7 +114,7 @@ Additional, there are 3 pins, which can be set individual:
 
 *These pins can be changed from the /setup URL.*
 
-#### ESP8266 wiring example
+#### ESP8266 wiring example on WEMOS D1
 
 This is an example wiring using a Wemos D1 mini.<br>
 
@@ -118,6 +125,18 @@ This is an example wiring using a Wemos D1 mini.<br>
 ##### Symbolic view
 
 ![Symbolic](doc/AhoyWemos_Steckplatine.jpg)
+
+#### ESP8266 wiring example on 30pin Lolin NodeMCU v3
+
+This is an example wiring using a NodeMCU V3.<br>
+
+##### Schematic
+
+![Schematic](doc/ESP8266_nRF24L01+_Schaltplan.jpg)
+
+##### Symbolic view
+
+![Symbolic](doc/ESP8266_nRF24L01+_bb.png)
 
 #### ESP32 wiring example
 
@@ -133,7 +152,7 @@ Example wiring for a 38pin ESP32 module
 
 ##### ESP32 GPIO settings
 
-For this wiring, set the 3 individual GPIOs under the /setup URL:
+CS, CE, IRQ must be set according to how they are wired up. For the diagram above, set the 3 individual GPIOs under the /setup URL as follows:
 
 ```
 CS   D1 (GPIO5)
@@ -141,12 +160,27 @@ CE   D2 (GPIO4)
 IRQ  D0 (GPIO16 - no IRQ!)
 ```
 
+IMPORTANT: From development version 108/release 0.6.0 onwards, also MISO, MOSI, and SCLK
+are configurable. On new installations, their defaults are correct for most ESP32 boards.
+These pins cannot be configured for ESP82xx boards, as this chip cannot move them elsewhere.
+
+If you are upgrading an existing install though, you might see that these pins are set to '0' in the web GUI. 
+Communication with the NRF module wont work. For upgrading an existing installations, set MISO=19, MOSI=23, SCLK=18 in the settings. 
+This is the correct default for most ESP32 boards. On ESP82xx, simply saving the settings without changes should suffice.
+Save and reboot.
+
+
 ## Flash the Firmware on your Ahoy DTU Hardware
 
 Once your Hardware is ready to run, you need to flash the Ahoy DTU Firmware to your Board.
 You can either build your own using your own configuration or use one of our pre-compiled generic builds.
 
-#### Compiling your own Version
+### Flash from your browser (easy)
+
+The easiest step for you is to flash online. A browser MS Edge or Google Chrome is required.
+[Here you go](https://ahoydtu.de/web_install/)
+
+### Compiling your own Version
 
 This information suits you if you want to configure and build your own firmware.
 
@@ -230,9 +264,8 @@ When everything is wired up and the firmware is flashed, it is time to connect t
 | /cmdstat | show stat from the home page | | yes |
 | /visualization | displays the information from your converter |     | yes |
 | /livedata | displays the live data |     | yes |
-| /json | gets live-data in JSON format | json output from the livedata | no - enable via config_override.h |
 | /metrics | gets live-data for prometheus | prometheus metrics from the livedata | no - enable via config_override.h |
-| /api | |    |  yes |
+| /api | gets configuration and live-data in JSON format | json output from the configuration or livedata    |  yes |
 
 ## MQTT command to set the DTU without webinterface
 
@@ -254,12 +287,6 @@ When everything is wired up and the firmware is flashed, it is time to connect t
 | `PubSubClient`        | 2.8     | MIT      |
 | `ArduinoJson`         | 6.19.4  | MIT      |
 | `ESP Async WebServer` | 4.3.0   | ?        |
-
-## Contact
-
-We run a Discord Server that can be used to get in touch with the Developers and Users.
-
-<https://discord.gg/WzhxEY62mB>
 
 ## ToDo
 
